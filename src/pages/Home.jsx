@@ -10,21 +10,21 @@ const Home = () => {
           Chat Real Time
         </h1>
         <p className="text-gray-300 text-lg mb-8">
-          Tham gia ngay để khám phá trải nghiệm tuyệt vời và kết nối với cộng
-          đồng của bạn!
+          Join now to discover amazing experiences and connect with your
+          community!
         </p>
         <div className="flex justify-center gap-4">
           <a
             href="/register"
-            className="bg-purple-600 text-white py-2 px-9 rounded-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-800 transition duration-200 ease-in-out text-lg font-medium"
+            className="bg-purple-600 text-white py-2 px-6 rounded-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-800 transition duration-200 ease-in-out text-lg font-medium"
           >
-            Đăng ký
+            Register
           </a>
           <a
             href="/login"
-            className="bg-blue-600 text-white py-2 px-6 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-800 transition duration-200 ease-in-out text-lg font-medium"
+            className="bg-blue-600 text-white py-2 px-9 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-800 transition duration-200 ease-in-out text-lg font-medium"
           >
-            Đăng nhập
+            Login
           </a>
         </div>
       </div>

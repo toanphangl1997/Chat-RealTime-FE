@@ -26,10 +26,10 @@ const Login = () => {
     e.preventDefault();
     try {
       const res = await http.post("/auth/login", formData);
-      const { access_token } = res.data; // 👈 Đúng tên field trả về từ backend
-      localStorage.setItem("token", access_token); // 👈 Lưu token vào localStorage
+      const { access_token } = res.data; //  Đúng tên field trả về từ backend
+      localStorage.setItem("token", access_token); //  Lưu token vào localStorage
       console.log("Kết quả login:", res.data);
-      alert("Đăng nhập thành công");
+      // alert("Đăng nhập thành công");
       navigate("/chat");
     } catch (error) {
       console.error(error);
@@ -58,7 +58,7 @@ const Login = () => {
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-purple-700 flex justify-center items-center p-4">
       <div className="w-full max-w-md bg-gray-800 rounded-2xl shadow-xl p-8 transform transition-all hover:shadow-2xl">
         <h2 className="text-center text-3xl font-extrabold text-purple-300 mb-6">
-          Đăng Nhập
+          Login
         </h2>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
@@ -74,7 +74,7 @@ const Login = () => {
               name="email"
               value={formData.email}
               onChange={handleChange}
-              placeholder="Nhập email của bạn"
+              placeholder="Enter your email"
               className="mt-1 w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition duration-200 ease-in-out"
               required
             />
@@ -84,7 +84,7 @@ const Login = () => {
               htmlFor="password"
               className="block text-sm font-medium text-gray-200"
             >
-              Mật khẩu
+              Password
             </label>
             <input
               id="password"
@@ -92,7 +92,7 @@ const Login = () => {
               name="password"
               value={formData.password}
               onChange={handleChange}
-              placeholder="Nhập mật khẩu"
+              placeholder="Enter your password"
               className="mt-1 w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition duration-200 ease-in-out"
               required
             />
@@ -101,24 +101,24 @@ const Login = () => {
             type="submit"
             className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-800 transition duration-200 ease-in-out"
           >
-            Đăng nhập
+            Login
           </button>
         </form>
         <p className="mt-4 text-center text-gray-400 text-sm">
-          Chưa có tài khoản?{" "}
+          Don't have an account?{" "}
           <a
             onClick={() => navigate("/register")}
             href=""
             className="text-purple-400 hover:underline"
           >
-            Đăng ký
+            Register
           </a>
           <a
             onClick={() => navigate("/")}
             href=""
             className="block text-purple-400 hover:underline mt-4"
           >
-            Quay về trang chủ
+            Return to home page
           </a>
         </p>
       </div>

@@ -37,7 +37,7 @@ const Register = () => {
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-purple-700 flex justify-center items-center p-4">
       <div className="w-full max-w-md bg-gray-800 rounded-2xl shadow-xl p-8 transform transition-all hover:shadow-2xl">
         <h2 className="text-center text-3xl font-extrabold text-purple-300 mb-6">
-          Đăng Ký
+          Register
         </h2>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
@@ -53,7 +53,7 @@ const Register = () => {
               name="name"
               value={formData.name}
               onChange={handleNameChange}
-              placeholder="Nhập name của bạn"
+              placeholder="Enter your name"
               className="mt-1 w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition duration-200 ease-in-out"
               required
             />
@@ -71,7 +71,7 @@ const Register = () => {
               name="email"
               value={formData.email}
               onChange={handleEmailChange}
-              placeholder="Nhập email của bạn"
+              placeholder="Enter your email"
               className="mt-1 w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition duration-200 ease-in-out"
               required
             />
@@ -81,7 +81,7 @@ const Register = () => {
               htmlFor="password"
               className="block text-sm font-medium text-gray-200"
             >
-              Mật khẩu
+              Password
             </label>
             <input
               id="password"
@@ -89,7 +89,7 @@ const Register = () => {
               name="password"
               value={formData.password}
               onChange={handlePasswordChange}
-              placeholder="Tạo mật khẩu"
+              placeholder="Enter your password"
               className="mt-1 w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition duration-200 ease-in-out"
               required
             />
@@ -99,24 +99,24 @@ const Register = () => {
             type="submit"
             className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-800 transition duration-200 ease-in-out"
           >
-            Đăng ký
+            Register
           </button>
         </form>
         <p className="mt-4 text-center text-sm text-gray-400">
-          Đã có tài khoản?{" "}
+          Already have an account?{" "}
           <a
             onClick={() => navigate("/login")}
             href=""
             className="text-purple-400 hover:underline"
           >
-            Đăng nhập
+            Login
           </a>
           <a
             onClick={() => navigate("/")}
             href=""
             className="block text-purple-400 hover:underline mt-4"
           >
-            Quay về trang chủ
+            Return to home page
           </a>
         </p>
       </div>

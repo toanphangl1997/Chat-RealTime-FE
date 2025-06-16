@@ -1,7 +1,7 @@
 import MessageItem from "./MessageItem";
 
 const MessageList = ({ messages, selectedUser }) => (
-  <div className="flex-1 p-4 overflow-y-auto bg-gray-800">
+  <div className="flex-1 p-4 md:p-6 overflow-y-auto bg-gray-800">
     {selectedUser ? (
       messages.length === 0 ? (
         <p className="text-gray-400 text-center mt-10">

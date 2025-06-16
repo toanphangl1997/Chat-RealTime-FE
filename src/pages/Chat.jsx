@@ -1,4 +1,3 @@
-// components/Chat.jsx
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
@@ -17,6 +16,25 @@ const Chat = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
   const socketRef = useRef(socket);
+
+  // responsive
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [showSidebar, setShowSidebar] = useState(window.innerWidth >= 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      const isNowMobile = window.innerWidth < 768;
+      setIsMobile(isNowMobile);
+      if (!isNowMobile) setShowSidebar(true);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const handleSelectUser = (user) => {
+    setSelectedUser(user);
+    if (isMobile) setShowSidebar(false);
+  };
 
   useEffect(() => {
     const fetchUserAndInbox = async () => {
@@ -120,15 +138,29 @@ const Chat = () => {
   if (!user) return <div className="text-white p-4">Loading...</div>;
 
   return (
-    <div className="h-screen w-full bg-gradient-to-br from-gray-900 to-purple-900 flex">
-      <div className="h-full w-full bg-gray-800 rounded-none shadow-none flex overflow-hidden">
+    <div className="h-screen w-full bg-gradient-to-br from-gray-900 to-purple-900 flex flex-col md:flex-row">
+      {/* Sidebar */}
+      <div
+        className={`${
+          showSidebar ? "block" : "hidden"
+        } md:block md:w-1/4 h-full`}
+      >
         <Sidebar
           inboxUsers={inboxUsers}
           selectedUser={selectedUser}
-          setSelectedUser={setSelectedUser}
+          setSelectedUser={handleSelectUser}
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
+          handleLogout={handleLogout}
         />
+      </div>
+
+      {/* ChatWindow */}
+      <div
+        className={`${
+          showSidebar ? "hidden" : "block"
+        } md:block md:w-3/4 flex-1 h-full`}
+      >
         <ChatWindow
           selectedUser={selectedUser}
           messages={messages}
@@ -136,6 +168,8 @@ const Chat = () => {
           setMessageInput={setMessageInput}
           handleSendMessage={handleSendMessage}
           handleLogout={handleLogout}
+          isMobile={isMobile}
+          goBack={() => setShowSidebar(true)}
         />
       </div>
     </div>

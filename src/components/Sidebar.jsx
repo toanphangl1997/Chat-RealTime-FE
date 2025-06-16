@@ -7,13 +7,24 @@ const Sidebar = ({
   setSelectedUser,
   searchTerm,
   setSearchTerm,
+  show,
+  isMobile,
 }) => {
+  if (isMobile && !show) return null;
+
   const filteredUsers = inboxUsers.filter((u) =>
     u.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
-    <div className="w-1/4 bg-gray-900 border-r border-gray-700 flex flex-col">
+    <div
+      className={`
+        bg-gray-900 border-r border-gray-700 flex flex-col
+        w-full h-full 
+        ${isMobile ? "absolute z-20 left-0 top-0" : ""}
+      `}
+    >
+      {/* Search */}
       <div className="p-4 border-b border-gray-700">
         <div className="mb-3 relative">
           <FaSearch className="absolute top-2.5 left-3 text-gray-400" />
@@ -27,15 +38,20 @@ const Sidebar = ({
         </div>
       </div>
 
+      {/* Danh sách user */}
       <div className="flex-1 overflow-y-auto">
-        {filteredUsers.map((u) => (
-          <UserItem
-            key={u.id}
-            user={u}
-            isSelected={selectedUser?.id === u.id}
-            onClick={() => setSelectedUser(u)}
-          />
-        ))}
+        {filteredUsers.length > 0 ? (
+          filteredUsers.map((u) => (
+            <UserItem
+              key={u.id}
+              user={u}
+              isSelected={selectedUser?.id === u.id}
+              onClick={() => setSelectedUser(u)}
+            />
+          ))
+        ) : (
+          <p className="text-gray-400 p-4">Không tìm thấy người dùng</p>
+        )}
       </div>
     </div>
   );

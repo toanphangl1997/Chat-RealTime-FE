@@ -1,8 +1,12 @@
 // src/utils/axios.js
 import axios from "axios";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
+console.log("API URL:", import.meta.env.VITE_API_URL);
+
 const http = axios.create({
-  baseURL: "http://localhost:3197", // hoặc dùng process.env.REACT_APP_API_URL
+  baseURL: API_URL, // hoặc dùng process.env.REACT_APP_API_URL "http://localhost:3197"
   headers: {
     "Content-Type": "application/json",
   },

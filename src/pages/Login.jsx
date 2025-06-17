@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import http from "../api/axios";
 
@@ -8,21 +8,6 @@ const Login = () => {
     email: "",
     password: "",
   });
-
-  // (Tùy chọn) Kiểm tra đã đăng nhập từ trước chưa
-  useEffect(() => {
-    const fetchMe = async () => {
-      try {
-        const res = await http.get("/auth/me");
-        console.log("Đã đăng nhập rồi, user:", res.data);
-        navigate("/chat");
-      } catch (error) {
-        console.log("Chưa đăng nhập, hoặc token không hợp lệ.");
-      }
-    };
-
-    fetchMe();
-  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

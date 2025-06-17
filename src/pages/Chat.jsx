@@ -5,7 +5,7 @@ import http from "../api/axios";
 import ChatWindow from "../components/ChatWindow";
 import Sidebar from "../components/Sidebar";
 
-const socket = io("http://localhost:3197");
+const socket = io("https://chat-realtime-api-2i6s.onrender.com");
 
 const Chat = () => {
   const [user, setUser] = useState(null);
@@ -45,13 +45,19 @@ const Chat = () => {
 
         const inboxRes = await http.get("/messages/inbox");
         setInboxUsers(inboxRes.data);
+
+        // Nếu đang ở mobile và có inbox thì chọn người đầu tiên
+        if (isMobile && inboxRes.data.length > 0) {
+          setSelectedUser(inboxRes.data[0]);
+          setShowSidebar(false);
+        }
       } catch (err) {
         console.error("Không lấy được user hoặc inbox:", err);
         navigate("/login");
       }
     };
     fetchUserAndInbox();
-  }, [navigate]);
+  }, [navigate, isMobile]);
 
   useEffect(() => {
     socketRef.current.on("onlineUsers", (onlineList) => {
@@ -161,16 +167,24 @@ const Chat = () => {
           showSidebar ? "hidden" : "block"
         } md:block md:w-3/4 flex-1 h-full`}
       >
-        <ChatWindow
-          selectedUser={selectedUser}
-          messages={messages}
-          messageInput={messageInput}
-          setMessageInput={setMessageInput}
-          handleSendMessage={handleSendMessage}
-          handleLogout={handleLogout}
-          isMobile={isMobile}
-          goBack={() => setShowSidebar(true)}
-        />
+        {selectedUser ? (
+          <ChatWindow
+            selectedUser={selectedUser}
+            messages={messages}
+            messageInput={messageInput}
+            setMessageInput={setMessageInput}
+            handleSendMessage={handleSendMessage}
+            handleLogout={handleLogout}
+            isMobile={isMobile}
+            goBack={() => setShowSidebar(true)}
+          />
+        ) : (
+          <div className="text-white flex justify-center items-center h-full text-xl text-center px-4">
+            {isMobile
+              ? "Vui lòng chọn người để bắt đầu trò chuyện."
+              : "Chọn người dùng trong danh sách để bắt đầu chat."}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -9,13 +9,15 @@ const Login = () => {
     password: "",
   });
 
+  // (Tùy chọn) Kiểm tra đã đăng nhập từ trước chưa
   useEffect(() => {
     const fetchMe = async () => {
       try {
         const res = await http.get("/auth/me");
-        console.log("User info:", res.data);
+        console.log("Đã đăng nhập rồi, user:", res.data);
+        navigate("/chat");
       } catch (error) {
-        console.error("Lỗi khi lấy thông tin user:", error);
+        console.log("Chưa đăng nhập, hoặc token không hợp lệ.");
       }
     };
 
@@ -26,10 +28,15 @@ const Login = () => {
     e.preventDefault();
     try {
       const res = await http.post("/auth/login", formData);
-      const { access_token } = res.data; //  Đúng tên field trả về từ backend
-      localStorage.setItem("token", access_token); //  Lưu token vào localStorage
-      console.log("Kết quả login:", res.data);
-      // alert("Đăng nhập thành công");
+      const { access_token } = res.data;
+
+      localStorage.setItem("token", access_token); // Lưu token
+
+      // GỌI LẠI /auth/me SAU KHI LOGIN
+      const resMe = await http.get("/auth/me");
+      console.log("User info sau login:", resMe.data);
+
+      // Điều hướng tới trang chat
       navigate("/chat");
     } catch (error) {
       console.error(error);
@@ -37,15 +44,6 @@ const Login = () => {
     }
   };
 
-  // **** CÁCH 1 ****
-  // const handleEmailChange = (e) => {
-  //   setFormData({ ...formData, email: e.target.value });
-  // };
-  // const handlePasswordChange = (e) => {
-  //   setFormData({ ...formData, password: e.target.value });
-  // };
-
-  // **** CÁCH 2 **** nhớ thêm name vào mỗi input tương ứng khi thay đổi
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -108,14 +106,14 @@ const Login = () => {
           Don't have an account?{" "}
           <a
             onClick={() => navigate("/register")}
-            href=""
+            href="#"
             className="text-purple-400 hover:underline"
           >
             Register
           </a>
           <a
             onClick={() => navigate("/")}
-            href=""
+            href="#"
             className="block text-purple-400 hover:underline mt-4"
           >
             Return to home page

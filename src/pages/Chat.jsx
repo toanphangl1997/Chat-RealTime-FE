@@ -36,17 +36,18 @@ const Chat = () => {
     if (isMobile) setShowSidebar(false);
   };
 
+  // LOAD USER + INBOX
   useEffect(() => {
     const fetchUserAndInbox = async () => {
       try {
         const res = await http.get("/auth/me");
         setUser(res.data);
+
         socketRef.current.emit("userOnline", res.data.id);
 
         const inboxRes = await http.get("/messages/inbox");
         setInboxUsers(inboxRes.data);
 
-        // Nếu đang ở mobile và có inbox thì chọn người đầu tiên
         if (isMobile && inboxRes.data.length > 0) {
           setSelectedUser(inboxRes.data[0]);
           setShowSidebar(false);
@@ -56,9 +57,11 @@ const Chat = () => {
         navigate("/login");
       }
     };
+
     fetchUserAndInbox();
   }, [navigate, isMobile]);
 
+  // SOCKET ONLINE USERS
   useEffect(() => {
     socketRef.current.on("onlineUsers", (onlineList) => {
       setInboxUsers((prev) =>
@@ -67,6 +70,7 @@ const Chat = () => {
           online: onlineList.some((ou) => ou.id === u.id),
         }))
       );
+
       setSelectedUser((prev) => {
         if (!prev) return null;
         const isOnline = onlineList.some((ou) => ou.id === prev.id);
@@ -79,35 +83,49 @@ const Chat = () => {
     };
   }, []);
 
+  // FETCH MESSAGES (FIX AVATAR)
   useEffect(() => {
     const fetchMessages = async () => {
       if (!selectedUser || !user) return;
+
       try {
         const res = await http.get("/messages");
+
         const filtered = res.data
           .filter(
             (m) =>
-              (m.sender.id === user.id && m.receiver.id === selectedUser.id) ||
-              (m.receiver.id === user.id && m.sender.id === selectedUser.id)
+              (m.sender.id === user.id &&
+                m.receiver.id === selectedUser.id) ||
+              (m.receiver.id === user.id &&
+                m.sender.id === selectedUser.id)
           )
-          .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+          .sort(
+            (a, b) => new Date(a.created_at) - new Date(b.created_at)
+          );
+
         const formatted = filtered.map((msg) => ({
           id: msg.id,
-          sender: msg.sender.id === user.id ? "Bạn" : msg.sender.name,
+          senderId: msg.sender.id,
+          senderName: msg.sender.name,
+          senderAvatar: msg.sender.avatar,
+          isOwn: msg.sender.id === user.id,
           content: msg.content,
           time: new Date(msg.created_at).toLocaleTimeString("vi-VN", {
             hour: "2-digit",
             minute: "2-digit",
           }),
         }));
+
         setMessages(formatted);
       } catch (err) {
         console.error("Không lấy được tin nhắn:", err);
       }
     };
+
     fetchMessages();
   }, [selectedUser, user]);
 
+  // SEND MESSAGE (FIX AVATAR)
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!messageInput.trim() || !selectedUser) return;
@@ -118,11 +136,15 @@ const Chat = () => {
         receiver_id: selectedUser.id,
         content: messageInput,
       });
+
       setMessages((prev) => [
         ...prev,
         {
           id: Date.now(),
-          sender: "Bạn",
+          senderId: user.id,
+          senderName: user.name,
+          senderAvatar: user.avatar,
+          isOwn: true,
           content: messageInput,
           time: new Date().toLocaleTimeString("vi-VN", {
             hour: "2-digit",
@@ -130,6 +152,7 @@ const Chat = () => {
           }),
         },
       ]);
+
       setMessageInput("");
     } catch (err) {
       console.error("Gửi tin nhắn lỗi:", err);

@@ -10,24 +10,19 @@ const Login = () => {
   });
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await http.post("/auth/login", formData);
-      const { access_token } = res.data;
+  e.preventDefault();
+  try {
+    const res = await http.post("/auth/login", formData);
+    const { access_token } = res.data;
 
-      localStorage.setItem("token", access_token); // Lưu token
+    localStorage.setItem("token", access_token);
 
-      // GỌI LẠI /auth/me SAU KHI LOGIN
-      const resMe = await http.get("/auth/me");
-      console.log("User info sau login:", resMe.data);
-
-      // Điều hướng tới trang chat
-      navigate("/chat");
-    } catch (error) {
-      console.error(error);
-      alert(error?.response?.data?.message || "Đăng nhập thất bại");
-    }
-  };
+    navigate("/chat");
+  } catch (error) {
+    console.error(error);
+    alert(error?.response?.data?.message || "Đăng nhập thất bại");
+  }
+};
 
   const handleChange = (e) => {
     const { name, value } = e.target;

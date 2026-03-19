@@ -5,8 +5,6 @@ import http from "../api/axios";
 import ChatWindow from "../components/ChatWindow";
 import Sidebar from "../components/Sidebar";
 
-const socket = io("https://chat-realtime-api-2i6s.onrender.com");
-
 const Chat = () => {
   const [user, setUser] = useState(null);
   const [inboxUsers, setInboxUsers] = useState([]);
@@ -15,7 +13,8 @@ const Chat = () => {
   const [messageInput, setMessageInput] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
-  const socketRef = useRef(socket);
+
+  const socketRef = useRef(null);
 
   // responsive
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -36,16 +35,16 @@ const Chat = () => {
     if (isMobile) setShowSidebar(false);
   };
 
-  // LOAD USER + INBOX
+  // ✅ LOAD USER + INBOX (PARALLEL → NHANH HƠN)
   useEffect(() => {
     const fetchUserAndInbox = async () => {
       try {
-        const res = await http.get("/auth/me");
-        setUser(res.data);
+        const [userRes, inboxRes] = await Promise.all([
+          http.get("/auth/me"),
+          http.get("/messages/inbox"),
+        ]);
 
-        socketRef.current.emit("userOnline", res.data.id);
-
-        const inboxRes = await http.get("/messages/inbox");
+        setUser(userRes.data);
         setInboxUsers(inboxRes.data);
 
         if (isMobile && inboxRes.data.length > 0) {
@@ -61,8 +60,14 @@ const Chat = () => {
     fetchUserAndInbox();
   }, [navigate, isMobile]);
 
-  // SOCKET ONLINE USERS
+  // ✅ CONNECT SOCKET SAU KHI CÓ USER (TRÁNH BLOCK UI)
   useEffect(() => {
+    if (!user) return;
+
+    socketRef.current = io("https://chat-realtime-api-2i6s.onrender.com");
+
+    socketRef.current.emit("userOnline", user.id);
+
     socketRef.current.on("onlineUsers", (onlineList) => {
       setInboxUsers((prev) =>
         prev.map((u) => ({
@@ -79,11 +84,11 @@ const Chat = () => {
     });
 
     return () => {
-      socketRef.current.off("onlineUsers");
+      socketRef.current.disconnect();
     };
-  }, []);
+  }, [user]);
 
-  // FETCH MESSAGES (FIX AVATAR)
+  // ✅ FETCH MESSAGES (GIẢM LAG)
   useEffect(() => {
     const fetchMessages = async () => {
       if (!selectedUser || !user) return;
@@ -99,6 +104,7 @@ const Chat = () => {
               (m.receiver.id === user.id &&
                 m.sender.id === selectedUser.id)
           )
+          .slice(-50) // 🔥 chỉ lấy 50 tin gần nhất → giảm lag mạnh
           .sort(
             (a, b) => new Date(a.created_at) - new Date(b.created_at)
           );
@@ -125,7 +131,7 @@ const Chat = () => {
     fetchMessages();
   }, [selectedUser, user]);
 
-  // SEND MESSAGE (FIX AVATAR)
+  // ✅ SEND MESSAGE (GIỮ UI MƯỢT)
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!messageInput.trim() || !selectedUser) return;
@@ -164,7 +170,13 @@ const Chat = () => {
     navigate("/");
   };
 
-  if (!user) return <div className="text-white p-4">Loading...</div>;
+  // ✅ LOADING UI (TRÁNH KHỰNG)
+  if (!user)
+    return (
+      <div className="h-screen flex items-center justify-center text-white text-lg">
+        Loading chat...
+      </div>
+    );
 
   return (
     <div className="h-screen w-full bg-gradient-to-br from-gray-900 to-purple-900 flex flex-col md:flex-row">
@@ -184,7 +196,7 @@ const Chat = () => {
         />
       </div>
 
-      {/* ChatWindow */}
+      {/* Chat */}
       <div
         className={`${
           showSidebar ? "hidden" : "block"
@@ -205,7 +217,8 @@ const Chat = () => {
           <div className="text-white flex justify-center items-center h-full text-xl text-center px-4">
             {isMobile
               ? "Vui lòng chọn người để bắt đầu trò chuyện."
-              : "Chọn người dùng trong danh sách để bắt đầu chat."}
+              : "Chọn người dùng trong danh sách để bắt đầu chat."
+            }
           </div>
         )}
       </div>

@@ -7,6 +7,7 @@ console.log("API URL:", import.meta.env.VITE_API_URL);
 
 const http = axios.create({
   baseURL: API_URL, // hoặc dùng process.env.REACT_APP_API_URL "http://localhost:3197"
+  timeout: 10000,
   headers: {
     "Content-Type": "application/json",
   },

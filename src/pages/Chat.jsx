@@ -173,9 +173,10 @@ const Chat = () => {
   }
 
   return (
-    <div className="h-screen flex">
+    <div className="h-screen flex w-full overflow-hidden">
       {/* Sidebar */}
-      <div className={`${showSidebar ? "block" : "hidden"} md:block md:w-1/4`}>
+      <div className={`${showSidebar ? "block w-full" : "hidden"}
+      md:block md:w-1/4`}>
         <Sidebar
           inboxUsers={inboxUsers}
           selectedUser={selectedUser}
@@ -187,7 +188,8 @@ const Chat = () => {
       </div>
 
       {/* Chat Window */}
-      <div className={`${showSidebar ? "hidden" : "block"} md:block md:w-3/4`}>
+      <div className={`${showSidebar ? "hidden" : "block w-full"}
+      md:block md:w-3/4`}>
         <ChatWindow
           selectedUser={selectedUser}
           messages={messages}

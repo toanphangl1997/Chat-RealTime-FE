@@ -3,6 +3,7 @@ import Chat from "../pages/Chat";
 import Home from "../pages/Home";
 import Login from "../pages/Login";
 import Register from "../pages/Register";
+import ProtectedRoute from "../components/ProtectedRoute";
 
 const RootCustom = () => {
   return useRoutes([
@@ -20,7 +21,11 @@ const RootCustom = () => {
     },
     {
       path: "/chat",
-      element: <Chat />,
+      element: (
+        <ProtectedRoute>
+          <Chat />
+        </ProtectedRoute>
+      ),
     },
   ]);
 };

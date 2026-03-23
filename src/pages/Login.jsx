@@ -4,100 +4,78 @@ import http from "../api/axios";
 
 const Login = () => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
-
-  const handleSubmit = async (e) => {
-  e.preventDefault();
-  try {
-    const res = await http.post("/auth/login", formData);
-    const { access_token } = res.data;
-
-    localStorage.setItem("token", access_token);
-
-    navigate("/chat");
-  } catch (error) {
-    console.error(error);
-    alert(error?.response?.data?.message || "Đăng nhập thất bại");
-  }
-};
+  const [formData, setFormData] = useState({ email: "", password: "" });
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      setLoading(true);
+
+      // 1️⃣ login
+      const res = await http.post("/auth/login", formData);
+      const { access_token } = res.data;
+      localStorage.setItem("token", access_token);
+
+      // 2️⃣ preload user info
+      const userRes = await http.get("/auth/me");
+
+      // 3️⃣ navigate chat với state user
+      navigate("/chat", { state: { user: userRes.data } });
+    } catch (err) {
+      console.error(err);
+      alert(err?.response?.data?.message || "Login Failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-purple-700 flex justify-center items-center p-4">
-      <div className="w-full max-w-md bg-gray-800 rounded-2xl shadow-xl p-8 transform transition-all hover:shadow-2xl">
+      <div className="w-full max-w-md bg-gray-800 rounded-2xl shadow-xl p-8">
         <h2 className="text-center text-3xl font-extrabold text-purple-300 mb-6">
           Login
         </h2>
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium text-gray-200"
-            >
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="Enter your email"
-              className="mt-1 w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition duration-200 ease-in-out"
-              required
-            />
-          </div>
-          <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-gray-200"
-            >
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="Enter your password"
-              className="mt-1 w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition duration-200 ease-in-out"
-              required
-            />
-          </div>
+          <input
+            type="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            placeholder="Email"
+            className="w-full px-4 py-2 rounded-lg bg-gray-700 text-white"
+            required
+          />
+          <input
+            type="password"
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+            placeholder="Password"
+            className="w-full px-4 py-2 rounded-lg bg-gray-700 text-white"
+            required
+          />
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-800 transition duration-200 ease-in-out"
+            disabled={loading}
+            className="w-full bg-blue-600 py-2 rounded-lg text-white"
           >
-            Login
+            {loading ? "Đang đăng nhập..." : "Login"}
           </button>
         </form>
-        <p className="mt-4 text-center text-gray-400 text-sm">
+        <p className="mt-4 text-center text-gray-400">
           Don't have an account?{" "}
-          <a
+          <span
             onClick={() => navigate("/register")}
-            href="#"
-            className="text-purple-400 hover:underline"
+            className="text-purple-400 cursor-pointer"
           >
             Register
-          </a>
-          <a
-            onClick={() => navigate("/")}
-            href="#"
-            className="block text-purple-400 hover:underline mt-4"
-          >
-            Return to home page
-          </a>
+          </span>
         </p>
       </div>
     </div>

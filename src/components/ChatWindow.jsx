@@ -1,17 +1,24 @@
 import MessageInput from "./MessageInput";
 import MessageList from "./MessageList";
 
+const DEFAULT_AVATAR = "https://ui-avatars.com/api/?name=User";
+
+const getAvatar = (avatar) => {
+  if (!avatar) return DEFAULT_AVATAR;
+  if (typeof avatar === "string" && avatar.startsWith("http")) return avatar;
+  return DEFAULT_AVATAR;
+};
+
 const ChatWindow = ({
   selectedUser,
   messages,
   messageInput,
   setMessageInput,
   handleSendMessage,
-  handleLogout,
+  handleLogout, // <- nhận prop từ Chat.jsx
   isMobile,
   goBack,
 }) => {
-  // Nếu trên mobile và chưa chọn người dùng → không hiển thị giao diện chat
   if (isMobile && !selectedUser) {
     return (
       <div className="flex items-center justify-center text-white h-full">
@@ -24,7 +31,6 @@ const ChatWindow = ({
     <div className="w-full md:w-auto flex flex-col h-full bg-gray-800">
       {/* Header */}
       <div className="p-4 border-b border-gray-700 flex items-center justify-between">
-        {/* Nút quay lại trên mobile */}
         {isMobile && (
           <button
             onClick={goBack}
@@ -34,13 +40,16 @@ const ChatWindow = ({
           </button>
         )}
 
-        {/* Thông tin người được chọn */}
         {selectedUser ? (
           <div className="flex items-center flex-1 overflow-hidden">
             <img
-              src={selectedUser.avatar || "https://via.placeholder.com/40"}
+              src={getAvatar(selectedUser.avatar)}
               alt={selectedUser.name}
               className="w-10 h-10 rounded-full object-cover"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = DEFAULT_AVATAR;
+              }}
             />
             <div className="ml-3 truncate">
               <p className="text-white font-medium truncate max-w-[120px] md:max-w-none">
@@ -55,7 +64,6 @@ const ChatWindow = ({
           <p className="text-gray-400">Chọn người để bắt đầu trò chuyện</p>
         )}
 
-        {/* Logout */}
         <button
           onClick={handleLogout}
           className="text-sm text-red-400 hover:text-red-200 border border-red-500 px-2 py-1 rounded-md transition ml-4"
@@ -64,10 +72,8 @@ const ChatWindow = ({
         </button>
       </div>
 
-      {/* Danh sách tin nhắn */}
       <MessageList messages={messages} selectedUser={selectedUser} />
 
-      {/* Ô nhập tin nhắn */}
       {selectedUser && (
         <MessageInput
           messageInput={messageInput}

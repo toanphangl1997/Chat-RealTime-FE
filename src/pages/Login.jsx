@@ -17,15 +17,15 @@ const Login = () => {
     try {
       setLoading(true);
 
-      // 1️⃣ login
+      // login
       const res = await http.post("/auth/login", formData);
       const { access_token } = res.data;
       localStorage.setItem("token", access_token);
 
-      // 2️⃣ preload user info
+      // preload user info
       const userRes = await http.get("/auth/me");
 
-      // 3️⃣ navigate chat với state user
+      // navigate chat với state user
       navigate("/chat", { state: { user: userRes.data } });
     } catch (err) {
       console.error(err);

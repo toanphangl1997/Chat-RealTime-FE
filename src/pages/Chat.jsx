@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { io } from "socket.io-client";
 import http from "../api/axios";
+import { socket } from "../socket";
 import ChatWindow from "../components/ChatWindow";
 import Sidebar from "../components/Sidebar";
 
@@ -38,25 +38,52 @@ const Chat = () => {
     if (isMobile) setShowSidebar(false);
   };
 
-  // Fetch current user
+  // Fetch current user & connect socket
   useEffect(() => {
     const token = localStorage.getItem("token");
-
-    if (!token) {
-      navigate("/login", { replace: true });
-      return;
-    }
+    if (!token) return navigate("/login", { replace: true });
 
     const fetchUser = async () => {
       try {
         const res = await http.get("/auth/me");
         setUser(res.data);
+
+        // CONNECT SOCKET
+        socket.auth = { token }; // nếu server check token
+        socket.connect();
+        socketRef.current = socket;
+
+        socket.on("connect", () => {
+          console.log("Socket connected:", socket.id);
+        });
+
+        socket.on("disconnect", (reason) => {
+          console.log("Socket disconnected:", reason);
+        });
+
+        // Listen incoming messages
+        socket.on("new_message", (msg) => {
+          setMessages((prev) => [
+            ...prev,
+            {
+              ...msg,
+              isOwn: Number(msg.sender.id) === Number(res.data.id),
+            },
+          ]);
+        });
+
       } catch (err) {
         navigate("/login", { replace: true });
       }
     };
 
     fetchUser();
+
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+      }
+    };
   }, []);
 
   // Fetch inbox
@@ -132,6 +159,12 @@ const Chat = () => {
         receiver_id: selectedUser.id,
         content: tempMsg.content,
       });
+
+      // Emit to socket
+      if (socketRef.current && socketRef.current.connected) {
+        socketRef.current.emit("send_message", tempMsg);
+      }
+
     } catch (err) {
       console.error(err);
     }
@@ -143,24 +176,20 @@ const Chat = () => {
       await http.post("/auth/logout").catch(() => {});
     } catch (err) {}
 
-    // clear auth
     localStorage.removeItem("token");
     delete http.defaults.headers.common["Authorization"];
 
-    // disconnect socket
     if (socketRef.current) {
       socketRef.current.disconnect();
       socketRef.current = null;
     }
 
-    // reset state
     setUser(null);
     setInboxUsers([]);
     setSelectedUser(null);
     setMessages([]);
     setMessageInput("");
 
-    // force reload
     window.location.href = "/login";
   };
 
@@ -175,28 +204,34 @@ const Chat = () => {
   return (
     <div className="h-screen flex w-full overflow-hidden">
       {/* Sidebar */}
-      <div className={`${showSidebar ? "block w-full" : "hidden"}
-      md:block md:w-1/4`}>
+      <div
+        className={`${
+          showSidebar ? "block w-full" : "hidden"
+        } md:block md:w-1/4`}
+      >
         <Sidebar
           inboxUsers={inboxUsers}
           selectedUser={selectedUser}
           setSelectedUser={handleSelectUser}
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
-          handleLogout={handleLogout} // <- truyền logout vào Sidebar nếu cần
+          handleLogout={handleLogout}
         />
       </div>
 
       {/* Chat Window */}
-      <div className={`${showSidebar ? "hidden" : "block w-full"}
-      md:block md:w-3/4`}>
+      <div
+        className={`${
+          showSidebar ? "hidden" : "block w-full"
+        } md:block md:w-3/4`}
+      >
         <ChatWindow
           selectedUser={selectedUser}
           messages={messages}
           messageInput={messageInput}
           setMessageInput={setMessageInput}
           handleSendMessage={handleSendMessage}
-          handleLogout={handleLogout} // <- truyền logout vào ChatWindow
+          handleLogout={handleLogout}
           isMobile={isMobile}
           goBack={() => setShowSidebar(true)}
         />

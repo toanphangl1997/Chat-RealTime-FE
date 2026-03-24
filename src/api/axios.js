@@ -1,13 +1,12 @@
-// src/api/axios.js
+
 import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3197";
-
 console.log("API_URL:", API_URL);
 
 const http = axios.create({
   baseURL: API_URL,
-  timeout: 30000,
+  timeout: 30000, // tăng timeout để phòng backend sleep
   headers: {
     "Content-Type": "application/json",
   },
@@ -24,11 +23,17 @@ http.interceptors.request.use(
       delete config.headers.Authorization;
     }
 
-    console.log("Axios Request:", config.url, config.method, config.headers);
+    // DEBUG log chỉ khi dev
+    if (import.meta.env.DEV) {
+      const safeHeaders = { ...config.headers };
+      if (safeHeaders.Authorization) safeHeaders.Authorization = "***";
+      console.log("Axios Request:", config.url, config.method, safeHeaders);
+    }
+
     return config;
   },
   (error) => {
-    console.error("Axios Request Error:", error);
+    if (import.meta.env.DEV) console.error("Axios Request Error:", error);
     return Promise.reject(error);
   }
 );
@@ -36,16 +41,20 @@ http.interceptors.request.use(
 // RESPONSE interceptor
 http.interceptors.response.use(
   (response) => {
-    console.log("Axios Response:", response.status, response.config.url);
+    if (import.meta.env.DEV) {
+      console.log("Axios Response:", response.status, response.config.url);
+    }
     return response;
   },
   (error) => {
     const status = error?.response?.status;
 
     if (status) {
-      console.error("Axios Response Error:", status, error?.response?.data);
+      if (import.meta.env.DEV)
+        console.error("Axios Response Error:", status, error?.response?.data);
     } else {
-      console.error("Axios Timeout or Network Error:", error.message);
+      if (import.meta.env.DEV)
+        console.error("Axios Timeout or Network Error:", error.message);
     }
 
     if (status === 401) {

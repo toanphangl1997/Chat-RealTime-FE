@@ -19,15 +19,22 @@ const Chat = () => {
   const selectedUserIdRef = useRef(null);
 
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  const [showSidebar, setShowSidebar] = useState(window.innerWidth >= 768);
+
+  // 👉 MOBILE phải show sidebar trước
+  const [showSidebar, setShowSidebar] = useState(window.innerWidth < 768);
 
   // Responsive
   useEffect(() => {
     const handleResize = () => {
       const isNowMobile = window.innerWidth < 768;
       setIsMobile(isNowMobile);
-      if (!isNowMobile) setShowSidebar(true);
+
+      // Desktop luôn show sidebar
+      if (!isNowMobile) {
+        setShowSidebar(true);
+      }
     };
+
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
@@ -35,6 +42,8 @@ const Chat = () => {
   // Select user
   const handleSelectUser = (user) => {
     setSelectedUser(user);
+
+    // Mobile → ẩn sidebar để show chat
     if (isMobile) setShowSidebar(false);
   };
 
@@ -49,7 +58,7 @@ const Chat = () => {
         setUser(res.data);
 
         // CONNECT SOCKET
-        socket.auth = { token }; // nếu server check token
+        socket.auth = { token };
         socket.connect();
         socketRef.current = socket;
 
@@ -61,7 +70,6 @@ const Chat = () => {
           console.log("Socket disconnected:", reason);
         });
 
-        // Listen incoming messages
         socket.on("new_message", (msg) => {
           setMessages((prev) => [
             ...prev,
@@ -86,25 +94,24 @@ const Chat = () => {
     };
   }, []);
 
-  // Fetch inbox
+  // ✅ Fetch inbox
   useEffect(() => {
-    if (!user) return;
+  if (!user) return;
 
-    const fetchInbox = async () => {
-      try {
-        const res = await http.get("/messages/inbox");
-        setInboxUsers(res.data);
+  const fetchInbox = async () => {
+    try {
+      const res = await http.get("/messages/inbox");
+      setInboxUsers(res.data);
 
-        if (res.data.length > 0) {
-          setSelectedUser(res.data[0]);
-        }
-      } catch (err) {
-        console.error(err);
-      }
-    };
+      // KHÔNG auto chọn user nữa (desktop + mobile giống nhau)
 
-    fetchInbox();
-  }, [user]);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  fetchInbox();
+}, [user]);
 
   // Fetch conversation messages
   useEffect(() => {
@@ -160,7 +167,6 @@ const Chat = () => {
         content: tempMsg.content,
       });
 
-      // Emit to socket
       if (socketRef.current && socketRef.current.connected) {
         socketRef.current.emit("send_message", tempMsg);
       }
@@ -233,7 +239,11 @@ const Chat = () => {
           handleSendMessage={handleSendMessage}
           handleLogout={handleLogout}
           isMobile={isMobile}
-          goBack={() => setShowSidebar(true)}
+          goBack={() => {
+            setSelectedUser(null);
+            setMessages([]);
+            setShowSidebar(true);
+          }}
         />
       </div>
     </div>

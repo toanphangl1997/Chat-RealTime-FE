@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import MessageItem from "./MessageItem";
 
-const MessageList = ({ messages, selectedUser }) => {
+const MessageList = ({ messages = [], selectedUser }) => {
   const bottomRef = useRef();
 
   useEffect(() => {
@@ -16,7 +16,7 @@ const MessageList = ({ messages, selectedUser }) => {
     );
   }
 
-  if (messages.length === 0) {
+  if (!messages || messages.length === 0) {
     return (
       <div className="flex-1 p-4 md:p-6 overflow-y-auto bg-gray-800 px-2 py-1 sm:px-3 sm:py-2 text-center text-gray-400">
         Start chatting with {selectedUser.name}!
@@ -24,9 +24,14 @@ const MessageList = ({ messages, selectedUser }) => {
     );
   }
 
+  // sort theo thời gian
+  const sortedMessages = [...messages].sort(
+    (a, b) => new Date(a.created_at) - new Date(b.created_at)
+  );
+
   return (
     <div className="flex-1 p-4 md:p-6 overflow-y-auto bg-gray-800 px-2 py-1 sm:px-3 sm:py-2">
-      {messages.map((msg) => (
+      {sortedMessages.map((msg) => (
         <MessageItem key={msg.id} msg={msg} />
       ))}
       <div ref={bottomRef} />

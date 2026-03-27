@@ -18,7 +18,13 @@ const ChatWindow = ({
   handleLogout,
   isMobile,
   goBack,
+  onlineUsers, // ✅ thêm prop này
 }) => {
+  // realtime online status
+  const isOnline = selectedUser
+    ? onlineUsers.includes(selectedUser.id)
+    : false;
+
   return (
     <div className="w-full flex flex-col h-full bg-gray-800 overflow-hidden">
       {/* Header */}
@@ -35,34 +41,40 @@ const ChatWindow = ({
 
           {selectedUser ? (
             <div className="flex items-center flex-1 overflow-hidden">
-              <img
-                src={getAvatar(selectedUser.avatar)}
-                alt={selectedUser.name}
-                className="w-10 h-10 rounded-full object-cover"
-                onError={(e) => {
-                  e.target.onerror = null;
-                  e.target.src = DEFAULT_AVATAR;
-                }}
-              />
+              <div className="relative">
+                <img
+                  src={getAvatar(selectedUser.avatar)}
+                  alt={selectedUser.name}
+                  className="w-10 h-10 rounded-full object-cover"
+                />
+
+                {/* FIX ONLINE REALTIME */}
+                <span
+                  className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-gray-800 ${
+                    isOnline ? "bg-green-500" : "bg-gray-500"
+                  }`}
+                ></span>
+              </div>
+
               <div className="ml-3 truncate">
-                <p className="text-white font-medium truncate max-w-[120px] md:max-w-none">
+                <p className="text-white font-medium truncate">
                   {selectedUser.name}
                 </p>
                 <p className="text-gray-400 text-sm">
-                  {selectedUser.online ? "Đang hoạt động" : "Ngoại tuyến"}
+                  {isOnline ? "Online" : "Offline"}
                 </p>
               </div>
             </div>
           ) : (
             <p className="text-gray-400">
-              Chọn người để bắt đầu trò chuyện
+              Choose someone to start the conversation with.
             </p>
           )}
         </div>
 
         <button
           onClick={handleLogout}
-          className="text-sm text-red-400 hover:text-red-200 border border-red-500 px-2 py-1 rounded-md transition ml-4"
+          className="text-sm text-red-400 hover:text-red-200 border border-red-500 px-2 py-1 rounded-md"
         >
           Logout
         </button>
@@ -81,7 +93,7 @@ const ChatWindow = ({
         </>
       ) : (
         <div className="flex-1 flex items-center justify-center text-gray-400">
-          Chọn người để bắt đầu trò chuyện
+          Choose someone to start the conversation with.
         </div>
       )}
     </div>

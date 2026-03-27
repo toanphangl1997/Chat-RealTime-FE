@@ -1,3 +1,47 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ===== SCROLLBAR DỌC (Inbox) ===== */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 10px;
+  opacity: 0.4;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+  opacity: 1;
+}
+
+/* ===== ẨN SCROLLBAR NGANG (Avatar) ===== */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* ===== SNAP SCROLL (Messenger style) ===== */
+.snap-x {
+  scroll-snap-type: x mandatory;
+}
+
+.snap-item {
+  scroll-snap-align: start;
+}
+
+/* ===== MOBILE SMOOTH SCROLL ===== */
+* {
+  -webkit-overflow-scrolling: touch;
+}

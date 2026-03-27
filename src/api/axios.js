@@ -27,7 +27,7 @@ http.interceptors.request.use(
     if (import.meta.env.DEV) {
       const safeHeaders = { ...config.headers };
       if (safeHeaders.Authorization) safeHeaders.Authorization = "***";
-      console.log("Axios Request:", config.url, config.method, safeHeaders);
+      // console.log("Axios Request:", config.url, config.method, safeHeaders);
     }
 
     return config;
@@ -42,7 +42,7 @@ http.interceptors.request.use(
 http.interceptors.response.use(
   (response) => {
     if (import.meta.env.DEV) {
-      console.log("Axios Response:", response.status, response.config.url);
+      // console.log("Axios Response:", response.status, response.config.url);
     }
     return response;
   },

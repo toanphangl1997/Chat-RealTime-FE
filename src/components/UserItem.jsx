@@ -1,18 +1,16 @@
 const DEFAULT_AVATAR = "https://ui-avatars.com/api/?name=User";
 
 const getAvatar = (avatar, name) => {
-  // nếu có avatar hợp lệ → dùng
   if (avatar && typeof avatar === "string" && avatar.startsWith("http")) {
     return avatar;
   }
 
-  // fallback theo tên (đẹp hơn placeholder)
   return `https://ui-avatars.com/api/?name=${encodeURIComponent(
     name || "User"
   )}`;
 };
 
-const UserItem = ({ user, isSelected, onClick }) => {
+const UserItem = ({ user, isSelected, onClick, isOnline }) => {
   return (
     <div
       onClick={onClick}
@@ -31,9 +29,12 @@ const UserItem = ({ user, isSelected, onClick }) => {
           }}
         />
 
-        {user.online && (
-          <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-gray-900"></span>
-        )}
+        {/* dùng isOnline thay vì user.online */}
+        <span
+          className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-gray-900 ${
+            isOnline ? "bg-green-500" : "bg-gray-500"
+          }`}
+        ></span>
       </div>
 
       <div className="ml-3 overflow-hidden">

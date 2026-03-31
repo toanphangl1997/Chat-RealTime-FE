@@ -1,6 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import http from "../api/axios";
+import { toast } from "react-toastify";
+
+const isValidEmail = (email) => {
+  return email.includes("@") && email.includes(".");
+};
 
 const Login = () => {
   const navigate = useNavigate();
@@ -11,35 +16,52 @@ const Login = () => {
   });
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(""); // thêm state error
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-
     setFormData((prev) => ({ ...prev, [name]: value }));
-    setError(""); // lear error khi user gõ lại
   };
+
+  // disable khi thiếu field
+  const isDisabled = !formData.email.trim() || !formData.password.trim();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (isDisabled) return;
+
+    // ===== VALIDATE meaningful =====
+    if (!isValidEmail(formData.email)) {
+      return toast.error("Invalid email format", {
+        toastId: "email-format",
+      });
+    }
+
+    if (formData.password.length < 6) {
+      return toast.error("Password must be at least 6 characters", {
+        toastId: "password-length",
+      });
+    }
+
     try {
       setLoading(true);
-      setError("");
 
-      const res = await http.post("/auth/login", formData);
+      const res = await http.post("/auth/login", {
+        email: formData.email.trim(),
+        password: formData.password,
+      });
+
       const { access_token } = res.data;
 
       localStorage.setItem("token", access_token);
 
       const userRes = await http.get("/auth/me");
 
+      toast.success("Login successful");
+
       navigate("/chat", { state: { user: userRes.data } });
     } catch (err) {
-      console.error(err);
-
-      // dùng message thân thiện
-      setError("Email hoặc mật khẩu không đúng");
+      console.error(err); // interceptor handle
     } finally {
       setLoading(false);
     }
@@ -53,38 +75,30 @@ const Login = () => {
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Email */}
           <input
-            type="email"
+            type="text"
             name="email"
             value={formData.email}
             onChange={handleChange}
             placeholder="Email"
-            className="w-full px-4 py-2 rounded-lg bg-gray-700 text-white outline-none focus:ring-2 focus:ring-purple-500"
-            required
+            className="w-full px-4 py-2 rounded-lg bg-gray-700 text-white"
           />
 
-          {/* Password */}
           <input
             type="password"
             name="password"
             value={formData.password}
             onChange={handleChange}
             placeholder="Password"
-            className="w-full px-4 py-2 rounded-lg bg-gray-700 text-white outline-none focus:ring-2 focus:ring-purple-500"
-            required
+            className="w-full px-4 py-2 rounded-lg bg-gray-700 text-white"
           />
 
-          {/* ERROR UI */}
-          {error && <p className="text-red-500 text-sm text-center">{error}</p>}
-
-          {/* Button */}
           <button
             type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 transition py-2 rounded-lg text-white disabled:opacity-50"
+            disabled={loading || isDisabled}
+            className="w-full bg-blue-600 py-2 rounded-lg text-white disabled:opacity-50"
           >
-            {loading ? "Đang đăng nhập..." : "Login"}
+            {loading ? "Signing in..." : "Login"}
           </button>
         </form>
 
@@ -92,7 +106,7 @@ const Login = () => {
           Don't have an account?{" "}
           <span
             onClick={() => navigate("/register")}
-            className="text-purple-400 cursor-pointer hover:underline"
+            className="text-purple-400 cursor-pointer"
           >
             Register
           </span>

@@ -1,10 +1,21 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import http from "../api/axios";
+import { toast } from "react-toastify";
+
+const isValidEmail = (email) => {
+  return email.includes("@") && email.includes(".");
+};
 
 const Register = () => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({ name: "", email: "", password: "" });
+
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+  });
+
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
@@ -12,16 +23,47 @@ const Register = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // disable khi thiếu field
+  const isDisabled =
+    !formData.name.trim() ||
+    !formData.email.trim() ||
+    !formData.password.trim();
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // ===== GUARD (không toast nữa) =====
+    if (isDisabled) return;
+
+    // ===== VALIDATE meaningful =====
+    if (!isValidEmail(formData.email)) {
+      return toast.error("Invalid email format", {
+        toastId: "email-format",
+      });
+    }
+
+    if (formData.password.length < 6) {
+      return toast.error("Password must be at least 6 characters", {
+        toastId: "password-length",
+      });
+    }
+
     try {
       setLoading(true);
-      await http.post("/auth/register", formData);
-      alert("Đăng ký thành công! Vui lòng đăng nhập.");
-      navigate("/login");
+
+      await http.post("/auth/register", {
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        password: formData.password,
+      });
+
+      toast.success("Register success. You can login now.");
+
+      setTimeout(() => {
+        navigate("/login");
+      }, 1500);
     } catch (err) {
-      console.error(err);
-      alert(err?.response?.data?.message || "Đăng ký thất bại!");
+      console.error(err); // interceptor handle
     } finally {
       setLoading(false);
     }
@@ -33,42 +75,44 @@ const Register = () => {
         <h2 className="text-center text-3xl font-extrabold text-purple-300 mb-6">
           Register
         </h2>
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
             type="text"
             name="name"
             value={formData.name}
             onChange={handleChange}
-            placeholder="Name"
+            placeholder="Your name"
             className="w-full px-4 py-2 rounded-lg bg-gray-700 text-white"
-            required
           />
+
           <input
-            type="email"
+            type="text"
             name="email"
             value={formData.email}
             onChange={handleChange}
-            placeholder="Email"
+            placeholder="Your email"
             className="w-full px-4 py-2 rounded-lg bg-gray-700 text-white"
-            required
           />
+
           <input
             type="password"
             name="password"
             value={formData.password}
             onChange={handleChange}
-            placeholder="Password"
+            placeholder="Your password"
             className="w-full px-4 py-2 rounded-lg bg-gray-700 text-white"
-            required
           />
+
           <button
             type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 py-2 rounded-lg text-white"
+            disabled={loading || isDisabled}
+            className="w-full bg-blue-600 py-2 rounded-lg text-white disabled:opacity-50"
           >
-            {loading ? "Đang đăng ký..." : "Register"}
+            {loading ? "Registering..." : "Register"}
           </button>
         </form>
+
         <p className="mt-4 text-center text-gray-400">
           Already have an account?{" "}
           <span

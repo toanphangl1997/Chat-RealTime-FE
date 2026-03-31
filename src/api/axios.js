@@ -1,17 +1,17 @@
 import axios from "axios";
+import { toast } from "react-toastify";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3197";
-console.log("API_URL:", API_URL);
 
 const http = axios.create({
   baseURL: API_URL,
-  timeout: 30000, // tăng timeout để phòng backend sleep
+  timeout: 30000,
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-// REQUEST interceptor
+// ================= REQUEST =================
 http.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
@@ -22,51 +22,54 @@ http.interceptors.request.use(
       delete config.headers.Authorization;
     }
 
-    // DEBUG log chỉ khi dev
-    if (import.meta.env.DEV) {
-      const safeHeaders = { ...config.headers };
-      if (safeHeaders.Authorization) safeHeaders.Authorization = "***";
-      // console.log("Axios Request:", config.url, config.method, safeHeaders);
-    }
-
-    // FIX: nếu là FormData thì KHÔNG set JSON
+    // FIX FormData
     if (config.data instanceof FormData) {
       delete config.headers["Content-Type"];
     }
 
     return config;
   },
-  (error) => {
-    if (import.meta.env.DEV) console.error("Axios Request Error:", error);
-    return Promise.reject(error);
-  },
+  (error) => Promise.reject(error),
 );
 
-// RESPONSE interceptor
+// ================= RESPONSE =================
 http.interceptors.response.use(
-  (response) => {
-    if (import.meta.env.DEV) {
-      // console.log("Axios Response:", response.status, response.config.url);
-    }
-    return response;
-  },
+  (response) => response,
   (error) => {
     const status = error?.response?.status;
+    const message = error?.response?.data?.message || "Something went wrong";
 
-    if (status) {
-      if (import.meta.env.DEV)
-        console.error("Axios Response Error:", status, error?.response?.data);
-    } else {
-      if (import.meta.env.DEV)
-        console.error("Axios Timeout or Network Error:", error.message);
-    }
+    const isLoginPage = window.location.pathname.includes("/login");
 
+    // ================= 401 =================
     if (status === 401) {
-      localStorage.removeItem("token");
-      if (!window.location.pathname.includes("/login")) {
-        window.location.href = "/login";
+      // Login sai password
+      if (isLoginPage) {
+        toast.error(message, {
+          toastId: "login-error",
+        });
+        return Promise.reject(error);
       }
+
+      // Token hết hạn
+      toast.error("Session expired. Please login again.", {
+        toastId: "session-expired",
+      });
+
+      localStorage.removeItem("token");
+      sessionStorage.clear();
+
+      setTimeout(() => {
+        window.location.href = "/login";
+      }, 1000);
+
+      return Promise.reject(error);
     }
+
+    // ================= OTHER ERROR =================
+    toast.error(message, {
+      toastId: "global-error",
+    });
 
     return Promise.reject(error);
   },

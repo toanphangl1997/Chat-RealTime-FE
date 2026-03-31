@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import http from "../api/axios";
+import { toast } from "react-toastify";
 
 const DEFAULT_AVATAR = "https://ui-avatars.com/api/?name=User";
 
 const ProfileModal = ({ isOpen, onClose, user, setUser }) => {
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
   const [avatarFile, setAvatarFile] = useState(null);
   const [preview, setPreview] = useState(DEFAULT_AVATAR);
 
@@ -14,10 +14,10 @@ const ProfileModal = ({ isOpen, onClose, user, setUser }) => {
 
   const [loading, setLoading] = useState(false);
 
+  // ===== INIT =====
   useEffect(() => {
-    if (user) {
+    if (user && isOpen) {
       setName(user.name || "");
-      setEmail(user.email || "");
       setPreview(user.avatar || DEFAULT_AVATAR);
 
       setAvatarFile(null);
@@ -26,139 +26,173 @@ const ProfileModal = ({ isOpen, onClose, user, setUser }) => {
     }
   }, [user, isOpen]);
 
+  // cleanup tránh leak memory
+  useEffect(() => {
+    return () => {
+      if (preview && preview.startsWith("blob:")) {
+        URL.revokeObjectURL(preview);
+      }
+    };
+  }, [preview]);
+
   if (!isOpen) return null;
 
-  // ===================== AVATAR =====================
+  // ===== DERIVED STATE =====
+  const isPasswordChanged = currentPassword && newPassword;
+
+  const isChanged =
+    avatarFile || name.trim() !== user.name || isPasswordChanged;
+
+  const isDisabled = loading || !isChanged;
+
+  // ===== AVATAR =====
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
+    if (!file.type.startsWith("image/")) {
+      return toast.error("Only image files are allowed", {
+        toastId: "file-type",
+      });
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      return toast.error("Image must be less than 2MB", {
+        toastId: "file-size",
+      });
+    }
+
     setAvatarFile(file);
-    setPreview(URL.createObjectURL(file));
+
+    const objectUrl = URL.createObjectURL(file);
+    setPreview(objectUrl);
   };
 
-  const updateAvatar = async () => {
-    if (!avatarFile) return null;
-
-    const formData = new FormData();
-    formData.append("avatar", avatarFile);
-
-    const res = await http.patch(`/users/${user.id}/avatar`, formData);
-    return res.data;
-  };
-
-  // ===================== NAME =====================
-  const updateName = async () => {
-    if (name === user.name) return null;
-
-    await http.patch(`/users/${user.id}`, { name });
-
-    return {
-      ...user,
-      name,
-    };
-  };
-
-  // ===================== PASSWORD =====================
-  const updatePassword = async () => {
-    if (!currentPassword && !newPassword) return;
-
-    if (!currentPassword || !newPassword) {
-      throw new Error("Vui lòng nhập đủ password");
-    }
-
-    if (newPassword.length < 6) {
-      throw new Error("Password phải >= 6 ký tự");
-    }
-
-    await http.post("/auth/change-password", {
-      currentPassword,
-      newPassword,
-    });
-  };
-
-  // ===================== SUBMIT =====================
   const handleSubmit = async () => {
+    // ===== VALIDATE (chỉ validate meaningful) =====
+
+    if (!name.trim()) {
+      return toast.error("Name cannot be empty", {
+        toastId: "name-empty",
+      });
+    }
+
+    if (currentPassword || newPassword) {
+      if (!currentPassword || !newPassword) {
+        return toast.error("Please fill both password fields", {
+          toastId: "password-missing",
+        });
+      }
+
+      if (newPassword.length < 6) {
+        return toast.error("New password must be at least 6 characters", {
+          toastId: "password-length",
+        });
+      }
+
+      if (currentPassword === newPassword) {
+        return toast.error(
+          "New password must be different from current password",
+          { toastId: "password-same" },
+        );
+      }
+    }
+
     try {
       setLoading(true);
 
       let updatedUser = { ...user };
+      const promises = [];
 
-      // 1. avatar
-      const avatarRes = await updateAvatar();
-      if (avatarRes) {
-        updatedUser = avatarRes;
+      // ===== API CALLS =====
+      if (avatarFile) {
+        const formData = new FormData();
+        formData.append("avatar", avatarFile);
+        promises.push(http.patch(`/users/${user.id}/avatar`, formData));
       }
 
-      // 2. name
-      const nameRes = await updateName();
-      if (nameRes) {
-        updatedUser = {
-          ...updatedUser,
-          name: nameRes.name,
-        };
+      if (name.trim() !== user.name) {
+        promises.push(http.patch(`/users/${user.id}`, { name: name.trim() }));
       }
 
-      // 3. password
-      await updatePassword();
+      if (isPasswordChanged) {
+        promises.push(
+          http.post("/auth/change-password", {
+            currentPassword,
+            newPassword,
+          }),
+        );
+      }
 
+      const results = await Promise.all(promises);
+
+      results.forEach((res) => {
+        if (res?.data?.avatar) updatedUser = res.data;
+        if (res?.data?.name) updatedUser.name = res.data.name;
+      });
+
+      // ===== PASSWORD FLOW =====
+      if (isPasswordChanged) {
+        toast.success("Password changed. Please login again", {
+          toastId: "password-success",
+        });
+
+        localStorage.removeItem("token");
+        sessionStorage.clear();
+
+        setTimeout(() => {
+          window.location.href = "/login";
+        }, 1500);
+
+        return;
+      }
+
+      // ===== NORMAL FLOW =====
       setUser(updatedUser);
       onClose();
+
+      toast.success("Profile updated", {
+        toastId: "profile-success",
+      });
     } catch (err) {
-      console.log("Update profile error:", err);
-      alert(err.message || "Có lỗi xảy ra");
+      console.error(err); // interceptor handle
     } finally {
       setLoading(false);
     }
   };
 
-  // ===================== VALIDATE =====================
-  const isChanged =
-    avatarFile || name !== user.name || (currentPassword && newPassword);
-
-  // ===================== UI =====================
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-50">
-      <div className="bg-gray-800/90 p-6 rounded-2xl w-80 shadow-xl border border-gray-700">
-        {/* Title */}
-        <h2 className="text-yellow-300 text-xl mb-4 text-center font-semibold tracking-wide">
+      <div className="bg-gray-800 p-6 rounded-2xl w-80 shadow-xl">
+        <h2 className="text-yellow-300 text-xl mb-4 text-center">
           {name || "User"}
         </h2>
 
-        {/* Avatar */}
         <div className="flex justify-center mb-4">
-          <label className="cursor-pointer group relative">
+          <label className="cursor-pointer">
             <img
               src={preview}
-              className="w-24 h-24 rounded-full object-cover border-2 border-gray-600 group-hover:opacity-80 transition"
+              className="w-24 h-24 rounded-full object-cover"
             />
             <input type="file" hidden onChange={handleFileChange} />
-
-            <div className="absolute inset-0 flex items-center justify-center text-xs text-white opacity-0 group-hover:opacity-100 transition">
-              Change
-            </div>
           </label>
         </div>
 
-        {/* Name */}
         <input
-          className="w-full mb-2 p-2 rounded-lg bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+          className="w-full mb-2 p-2 bg-gray-700 text-white rounded"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Name"
         />
 
-        {/* Email */}
         <input
-          className="w-full mb-2 p-2 rounded-lg bg-gray-700 text-gray-400 cursor-not-allowed"
-          value={email}
+          className="w-full mb-2 p-2 bg-gray-700 text-gray-400 rounded"
+          value={user.email}
           disabled
         />
 
-        {/* Password */}
         <input
           type="password"
-          className="w-full mb-2 p-2 rounded-lg bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full mb-2 p-2 bg-gray-700 text-white rounded"
           value={currentPassword}
           onChange={(e) => setCurrentPassword(e.target.value)}
           placeholder="Current Password"
@@ -166,25 +200,21 @@ const ProfileModal = ({ isOpen, onClose, user, setUser }) => {
 
         <input
           type="password"
-          className="w-full mb-4 p-2 rounded-lg bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full mb-4 p-2 bg-gray-700 text-white rounded"
           value={newPassword}
           onChange={(e) => setNewPassword(e.target.value)}
           placeholder="New Password"
         />
 
-        {/* Buttons */}
-        <div className="flex justify-end gap-3">
-          <button
-            onClick={onClose}
-            className="px-2 py-1 rounded-lg bg-red-500 hover:bg-red-600 transition text-white disabled:opacity-50"
-          >
+        <div className="flex justify-end gap-2">
+          <button onClick={onClose} className="bg-red-500 px-3 py-1 rounded">
             Cancel
           </button>
 
           <button
             onClick={handleSubmit}
-            disabled={!isChanged || loading}
-            className="px-4 py-1 rounded-lg bg-blue-500 hover:bg-blue-600 transition text-white disabled:opacity-50"
+            disabled={isDisabled}
+            className="bg-blue-500 px-3 py-1 rounded disabled:opacity-50"
           >
             {loading ? "Saving..." : "Save"}
           </button>

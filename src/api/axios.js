@@ -1,4 +1,3 @@
-
 import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3197";
@@ -30,12 +29,17 @@ http.interceptors.request.use(
       // console.log("Axios Request:", config.url, config.method, safeHeaders);
     }
 
+    // FIX: nếu là FormData thì KHÔNG set JSON
+    if (config.data instanceof FormData) {
+      delete config.headers["Content-Type"];
+    }
+
     return config;
   },
   (error) => {
     if (import.meta.env.DEV) console.error("Axios Request Error:", error);
     return Promise.reject(error);
-  }
+  },
 );
 
 // RESPONSE interceptor
@@ -65,7 +69,7 @@ http.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  }
+  },
 );
 
 export default http;

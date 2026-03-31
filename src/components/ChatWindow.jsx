@@ -19,11 +19,10 @@ const ChatWindow = ({
   isMobile,
   goBack,
   onlineUsers, // ✅ thêm prop này
+  onOpenProfile,
 }) => {
   // realtime online status
-  const isOnline = selectedUser
-    ? onlineUsers.includes(selectedUser.id)
-    : false;
+  const isOnline = selectedUser ? onlineUsers.includes(selectedUser.id) : false;
 
   return (
     <div className="w-full flex flex-col h-full bg-gray-800 overflow-hidden">
@@ -72,12 +71,21 @@ const ChatWindow = ({
           )}
         </div>
 
-        <button
-          onClick={handleLogout}
-          className="text-sm text-red-400 hover:text-red-200 border border-red-500 px-2 py-1 rounded-md"
-        >
-          Logout
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onOpenProfile}
+            className="text-sm text-blue-400 hover:text-blue-200 border border-blue-500 px-2 py-1 rounded-md"
+          >
+            Edit Profile
+          </button>
+
+          <button
+            onClick={handleLogout}
+            className="text-sm text-red-400 hover:text-red-200 border border-red-500 px-2 py-1 rounded-md"
+          >
+            Logout
+          </button>
+        </div>
       </div>
 
       {/* Body */}

@@ -5,12 +5,17 @@ import http from "../api/axios";
 import { useSocket } from "../hooks/useSocket";
 import { useUsers } from "../hooks/useUsers";
 import { useChat } from "../hooks/useChat";
-import { useOnlineUsers, OnlineUsersProvider } from "../context/OnlineUsersContext";
+import {
+  useOnlineUsers,
+  OnlineUsersProvider,
+} from "../context/OnlineUsersContext";
 
 import ChatWindow from "../components/ChatWindow";
 import Sidebar from "../components/Sidebar";
+import ProfileModal from "../components/ProfileModal";
 
-const ChatContent = ({ user }) => {
+// ================= CHAT CONTENT =================
+const ChatContent = ({ user, setUser }) => {
   const navigate = useNavigate();
 
   const [selectedUser, setSelectedUser] = useState(null);
@@ -18,6 +23,7 @@ const ChatContent = ({ user }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [showSidebar, setShowSidebar] = useState(window.innerWidth < 768);
+  const [isOpenProfile, setIsOpenProfile] = useState(false);
 
   // SOCKET
   const { socketRef } = useSocket();
@@ -29,10 +35,8 @@ const ChatContent = ({ user }) => {
   const { inboxUsers, allUsers } = useUsers(user, socketRef);
 
   // CHAT
-  const { getMessages, fetchMessages, sendMessage,typingUsers, markSeen} =
-    useChat(user, socketRef);
+  const { getMessages, fetchMessages, sendMessage } = useChat(user, socketRef);
 
-  // KHÔNG dùng useState messages
   const messages = getMessages(selectedUser);
 
   // RESPONSIVE
@@ -89,7 +93,9 @@ const ChatContent = ({ user }) => {
   return (
     <div className="h-screen flex w-full overflow-hidden">
       {/* SIDEBAR */}
-      <div className={`${showSidebar ? "block w-full" : "hidden"} md:block md:w-1/4`}>
+      <div
+        className={`${showSidebar ? "block w-full" : "hidden"} md:block md:w-1/4`}
+      >
         <Sidebar
           inboxUsers={inboxUsers}
           allUsers={allUsers}
@@ -106,7 +112,9 @@ const ChatContent = ({ user }) => {
       </div>
 
       {/* CHAT */}
-      <div className={`${showSidebar ? "hidden" : "block w-full"} md:block md:w-3/4`}>
+      <div
+        className={`${showSidebar ? "hidden" : "block w-full"} md:block md:w-3/4`}
+      >
         <ChatWindow
           selectedUser={selectedUser}
           messages={messages}
@@ -120,8 +128,17 @@ const ChatContent = ({ user }) => {
             setShowSidebar(true);
           }}
           onlineUsers={onlineUsers}
+          onOpenProfile={() => setIsOpenProfile(true)} //mở modal
         />
       </div>
+
+      {/* PROFILE MODAL */}
+      <ProfileModal
+        isOpen={isOpenProfile}
+        onClose={() => setIsOpenProfile(false)}
+        user={user}
+        setUser={setUser}
+      />
     </div>
   );
 };
@@ -156,7 +173,8 @@ const Chat = () => {
 
   return (
     <OnlineUsersProvider user={user}>
-      <ChatContent user={user} />
+      {/* truyền setUser xuống */}
+      <ChatContent user={user} setUser={setUser} />
     </OnlineUsersProvider>
   );
 };

@@ -1,64 +1,67 @@
-const DEFAULT_AVATAR = "https://ui-avatars.com/api/?name=User";
+import Avatar from "./Avatar";
 
-const getAvatar = (avatar) => {
-  if (!avatar) return DEFAULT_AVATAR;
+const MessageItem = ({ msg, prevMsg, nextMsg }) => {
+  const isOwn = msg.isOwn;
 
-  if (typeof avatar === "string" && avatar.startsWith("http")) {
-    return avatar;
-  }
+  const isSameSenderPrev = prevMsg && prevMsg.sender?.id === msg.sender?.id;
 
-  return DEFAULT_AVATAR;
-};
+  const isSameSenderNext = nextMsg && nextMsg.sender?.id === msg.sender?.id;
 
-const MessageItem = ({ msg }) => {
+  // chỉ show avatar nếu là message cuối cụm
+  const showAvatar = !isOwn && !isSameSenderNext;
+
   return (
     <div
-      className={`mb-2 flex items-end ${
-        msg.isOwn ? "justify-end" : "justify-start"
+      className={`flex ${isOwn ? "justify-end" : "justify-start"} items-end ${
+        isSameSenderPrev ? "mb-1" : "mb-3"
       }`}
     >
-      {/* Avatar người khác */}
-      {!msg.isOwn && (
-        <img
-          src={getAvatar(msg.sender?.avatar)}
-          alt="avatar"
-          className="w-8 h-8 rounded-full mr-2 object-cover"
-          onError={(e) => {
-            e.target.onerror = null;
-            e.target.src = DEFAULT_AVATAR;
-          }}
-        />
+      {/* Avatar (giữ width để không bị lệch layout) */}
+      {!isOwn && (
+        <div className="w-8 mr-[10px]">
+          {showAvatar && <Avatar user={msg.sender} size="sm" />}
+        </div>
       )}
 
       {/* Bubble */}
       <div
-        className={`${
-          msg.isOwn ? "bg-blue-600 text-white" : "bg-gray-700 text-gray-200"
-        } rounded-lg px-3 py-2 sm:px-4 sm:py-3 max-w-[75%] sm:max-w-[60%] text-sm sm:text-base break-words whitespace-pre-line`}
+        className={`
+          ${isOwn ? "bg-blue-600 text-white" : "bg-gray-700 text-gray-200"}
+
+          px-3 py-2 sm:px-4 sm:py-3
+          text-sm sm:text-base
+          break-words whitespace-pre-line
+          max-w-[min(60%,400px)]
+
+          ${
+            isOwn
+              ? `
+                rounded-2xl
+                ${isSameSenderPrev ? "rounded-tr-md" : ""}
+                ${isSameSenderNext ? "rounded-br-md" : ""}
+              `
+              : `
+                rounded-2xl
+                ${isSameSenderPrev ? "rounded-tl-md" : ""}
+                ${isSameSenderNext ? "rounded-bl-md" : ""}
+              `
+          }
+        `}
       >
         <p>{msg.content}</p>
-        <p className="text-[11px] sm:text-xs text-gray-300 mt-1 text-right">
-          {msg.created_at
-            ? new Date(msg.created_at).toLocaleTimeString("vi-VN", {
-                hour: "2-digit",
-                minute: "2-digit",
-              })
-            : ""}
-        </p>
-      </div>
 
-      {/* Avatar mình */}
-      {msg.isOwn && (
-        <img
-          src={getAvatar(msg.sender?.avatar)}
-          alt="avatar"
-          className="w-8 h-8 rounded-full ml-2 object-cover"
-          onError={(e) => {
-            e.target.onerror = null;
-            e.target.src = DEFAULT_AVATAR;
-          }}
-        />
-      )}
+        {/* chỉ show time ở cuối cụm */}
+        {!isSameSenderNext && (
+          <p className="text-[11px] sm:text-xs text-gray-300 mt-1 text-right">
+            {msg.created_at
+              ? new Date(msg.created_at).toLocaleTimeString("vi-VN", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })
+              : ""}
+          </p>
+        )}
+      </div>
     </div>
   );
 };

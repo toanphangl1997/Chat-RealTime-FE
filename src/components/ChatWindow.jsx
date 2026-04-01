@@ -1,13 +1,6 @@
 import MessageInput from "./MessageInput";
 import MessageList from "./MessageList";
-
-const DEFAULT_AVATAR = "https://ui-avatars.com/api/?name=User";
-
-const getAvatar = (avatar) => {
-  if (!avatar) return DEFAULT_AVATAR;
-  if (typeof avatar === "string" && avatar.startsWith("http")) return avatar;
-  return DEFAULT_AVATAR;
-};
+import Avatar from "./Avatar";
 
 const ChatWindow = ({
   selectedUser,
@@ -18,7 +11,7 @@ const ChatWindow = ({
   handleLogout,
   isMobile,
   goBack,
-  onlineUsers, // ✅ thêm prop này
+  onlineUsers,
   onOpenProfile,
 }) => {
   // realtime online status
@@ -41,10 +34,17 @@ const ChatWindow = ({
           {selectedUser ? (
             <div className="flex items-center flex-1 overflow-hidden">
               <div className="relative">
-                <img
-                  src={getAvatar(selectedUser.avatar)}
+                {/* <img
+                  src={getAvatar(selectedUser.avatar, selectedUser?.name)}
                   alt={selectedUser.name}
                   className="w-10 h-10 rounded-full object-cover"
+                /> */}
+
+                <Avatar
+                  user={selectedUser}
+                  size="md"
+                  showOnline
+                  isOnline={isOnline}
                 />
 
                 {/* FIX ONLINE REALTIME */}

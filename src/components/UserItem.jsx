@@ -1,14 +1,4 @@
-const DEFAULT_AVATAR = "https://ui-avatars.com/api/?name=User";
-
-const getAvatar = (avatar, name) => {
-  if (avatar && typeof avatar === "string" && avatar.startsWith("http")) {
-    return avatar;
-  }
-
-  return `https://ui-avatars.com/api/?name=${encodeURIComponent(
-    name || "User"
-  )}`;
-};
+import Avatar from "./Avatar";
 
 const UserItem = ({ user, isSelected, onClick, isOnline }) => {
   return (
@@ -19,15 +9,13 @@ const UserItem = ({ user, isSelected, onClick, isOnline }) => {
       }`}
     >
       <div className="relative flex-shrink-0">
-        <img
+        {/* <img
           src={getAvatar(user.avatar, user.name)}
           alt={user.name}
           className="w-10 h-10 rounded-full object-cover"
-          onError={(e) => {
-            e.target.onerror = null;
-            e.target.src = DEFAULT_AVATAR;
-          }}
-        />
+        /> */}
+
+        <Avatar user={user} size="md" showOnline isOnline={isOnline} />
 
         {/* dùng isOnline thay vì user.online */}
         <span
@@ -39,9 +27,7 @@ const UserItem = ({ user, isSelected, onClick, isOnline }) => {
 
       <div className="ml-3 overflow-hidden">
         <p className="text-white font-medium truncate">{user.name}</p>
-        <p className="text-gray-400 text-sm truncate">
-          {user.lastMessage}
-        </p>
+        <p className="text-gray-400 text-sm truncate">{user.lastMessage}</p>
       </div>
     </div>
   );

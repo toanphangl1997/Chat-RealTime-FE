@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import http from "../api/axios";
 import { toast } from "react-toastify";
-
-const DEFAULT_AVATAR = "https://ui-avatars.com/api/?name=User";
+import { getAvatar } from "../utils/avatar";
+import Avatar from "./Avatar";
 
 const ProfileModal = ({ isOpen, onClose, user, setUser }) => {
   const [name, setName] = useState("");
   const [avatarFile, setAvatarFile] = useState(null);
-  const [preview, setPreview] = useState(DEFAULT_AVATAR);
+  const [preview, setPreview] = useState("");
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -18,7 +18,7 @@ const ProfileModal = ({ isOpen, onClose, user, setUser }) => {
   useEffect(() => {
     if (user && isOpen) {
       setName(user.name || "");
-      setPreview(user.avatar || DEFAULT_AVATAR);
+      setPreview(getAvatar(user.avatar, user.name));
 
       setAvatarFile(null);
       setCurrentPassword("");
@@ -170,10 +170,11 @@ const ProfileModal = ({ isOpen, onClose, user, setUser }) => {
 
         <div className="flex justify-center mb-4">
           <label className="cursor-pointer">
-            <img
+            {/* <img
               src={preview}
               className="w-24 h-24 rounded-full object-cover"
-            />
+            /> */}
+            <Avatar user={{ name, avatar: preview }} size="xl" />
             <input type="file" hidden onChange={handleFileChange} />
           </label>
         </div>

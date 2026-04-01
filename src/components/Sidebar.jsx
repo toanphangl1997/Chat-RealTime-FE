@@ -2,6 +2,8 @@ import { useEffect, useRef } from "react";
 import { FaSearch } from "react-icons/fa";
 import UserItem from "./UserItem";
 import { useOnlineUsers } from "../context/OnlineUsersContext";
+import { getAvatar } from "../utils/avatar";
+import Avatar from "./Avatar";
 
 const Sidebar = ({
   inboxUsers,
@@ -26,15 +28,13 @@ const Sidebar = ({
 
   // FILTER
   const filteredUsers = inboxUsers.filter((u) =>
-    u.name.toLowerCase().includes(searchTerm.toLowerCase())
+    u.name.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   // MERGE
   const mergedUsers = [
     ...inboxUsers,
-    ...allUsers.filter(
-      (u) => !inboxUsers.some((i) => i.id === u.id)
-    ),
+    ...allUsers.filter((u) => !inboxUsers.some((i) => i.id === u.id)),
   ];
 
   const horizontalUsers = searchTerm
@@ -81,7 +81,7 @@ const Sidebar = ({
       {/* SEARCH */}
       <div className="p-4 border-b border-gray-700">
         <div className="mb-3 relative">
-          <FaSearch className="absolute top-2.5 left-3 text-gray-400" />
+          <FaSearch className="absolute top-3 left-3 text-gray-400" />
           <input
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -109,23 +109,37 @@ const Sidebar = ({
                 className="flex flex-col items-center cursor-pointer min-w-[60px]"
               >
                 <div className="relative">
-                  <img
-                    src={u.avatar}
+                  {/* <img
+                    src={getAvatar(u.avatar, u.name)}
                     className={`w-12 h-12 rounded-full border-2 transition ${
                       selectedUser?.id === u.id
                         ? "border-purple-500"
                         : isUnread
-                        ? "border-yellow-400" // ✅ highlight thật
-                        : "border-gray-700"
+                          ? "border-yellow-400"
+                          : "border-gray-700"
                     }`}
+                  /> */}
+
+                  <Avatar
+                    user={u}
+                    size="lg"
+                    showOnline
+                    isOnline={isOnline}
+                    className={`border-2 ${
+                      selectedUser?.id === u.id
+                        ? "border-purple-500"
+                        : isUnread
+                          ? "border-yellow-400"
+                          : "border-gray-700"
+                    } rounded-full`}
                   />
 
                   {/* ONLINE DOT */}
-                  <span
+                  {/* <span
                     className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-gray-900 ${
                       isOnline ? "bg-green-500" : "bg-gray-500"
                     }`}
-                  ></span>
+                  ></span> */}
 
                   {/* UNREAD DOT */}
                   {isUnread && (
